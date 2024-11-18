@@ -220,7 +220,7 @@ def atualizar_projeto():
 # Excluir um projeto
 def excluir_projeto():
     """
-    Exclui um projeto do banco de dados.
+    Exclui um projeto do banco de dados, após confirmação do usuário.
     """
     try:
         limpar_terminal()
@@ -232,6 +232,27 @@ def excluir_projeto():
 
         id_projeto = validar_numero_positivo(input("ID do projeto a ser excluído: "), "ID do Projeto")
 
+        # Busca o projeto para exibir informações antes da confirmação
+        consulta = "SELECT DESCRICAO, CUSTO, STATUS FROM TBL_PROJETOS_SUSTENTAVEIS WHERE ID_PROJETO = :id_projeto"
+        cursor.execute(consulta, {"id_projeto": id_projeto})
+        projeto = cursor.fetchone()
+
+        if not projeto:
+            print("\n🔴 Projeto com o ID informado não encontrado.")
+            return
+
+        print("\n=== Informações do Projeto ===")
+        print(f"Descrição: {projeto[0]}")
+        print(f"Custo: R${projeto[1]:,.2f}")
+        print(f"Status: {projeto[2]}")
+        print("\nTem certeza que deseja excluir este projeto? (sim/não)")
+        
+        confirmacao = input("Digite sua escolha: ").strip().lower()
+        if confirmacao != "sim":
+            print("\n🔴 Exclusão cancelada pelo usuário.")
+            return
+
+        # Exclusão confirmada
         query = "DELETE FROM TBL_PROJETOS_SUSTENTAVEIS WHERE ID_PROJETO = :id_projeto"
         cursor.execute(query, {"id_projeto": id_projeto})
         conexao.commit()
