@@ -394,9 +394,9 @@ def main():
         elif choice == "3":
             excluir_projeto()
         elif choice == "4":
-            consultar_projetos()  # Consulta normal
+            consultar_projetos()
         elif choice == "5":
-            projects = consultar_projetos(para_exportar=True)  # Ajuste para exportação
+            projects = consultar_projetos(para_exportar=True)
             if projects:
                 while True:
                     print("\n=== Exportar Dados ===")
