@@ -215,7 +215,7 @@ def atualizar_projeto():
 
         # Consultar informações atuais do projeto
         consulta = """
-            SELECT ID_PROJETO, DESCRICAO, CUSTO, STATUS 
+            SELECT ID_PROJETO, DESCRICAO, CUSTO, STATUS, ID_REGIAO 
             FROM RM556310.TBL_PROJETOS_SUSTENTAVEIS
             WHERE ID_PROJETO = :id_projeto
         """
@@ -232,18 +232,28 @@ def atualizar_projeto():
         print(f"Descrição: {resultado[1]}")
         print(f"Custo: R${resultado[2]:,.2f}")
         print(f"Status: {resultado[3]}")
+        print(f"Região ID: {resultado[4]}")
 
         # Solicitar novas informações
-        descricao = validar_string_nao_vazia(input("\nNova descrição do projeto: "), "Descrição")
-        custo = validar_numero_positivo(input("Novo custo do projeto: "), "Custo")
+        descricao = input("\nNova descrição do projeto (pressione Enter para manter): ").strip()
+        descricao = descricao if descricao else resultado[1]
+        print(f"Descrição mantida: {descricao}")
+
+        custo = input("Novo custo do projeto (pressione Enter para manter): ").strip()
+        custo = float(custo) if custo else resultado[2]
+        print(f"Custo mantido: R${custo:,.2f}")
 
         # Menu para selecionar o novo status do projeto
-        print("\n=== Escolha o novo status do projeto ===")
+        print("\n=== Escolha o novo status do projeto (pressione Enter para manter) ===")
         print("1. Em andamento")
         print("2. Concluído")
         while True:
-            status_opcao = input("Escolha uma opção (1-2): ").strip()
-            if status_opcao == "1":
+            status_opcao = input("Escolha uma opção (1-2 ou pressione Enter): ").strip()
+            if status_opcao == "":
+                status = resultado[3]
+                print(f"Status mantido: {status}")
+                break
+            elif status_opcao == "1":
                 status = "Em andamento"
                 break
             elif status_opcao == "2":
@@ -252,15 +262,22 @@ def atualizar_projeto():
             else:
                 print("🔴 Opção inválida. Tente novamente.")
 
+        # Menu para selecionar a nova região do projeto
+        print("\n=== Escolha a nova região do projeto (pressione Enter para manter) ===")
+        id_regiao = listar_opcoes("TBL_REGIOES_SUSTENTAVEIS", "ID_REGIAO", "NOME")
+        if id_regiao is None:
+            id_regiao = resultado[4]
+            print(f"Região mantida: ID {id_regiao}")
+
         # Atualizar o projeto no banco de dados
         query = """
             UPDATE TBL_PROJETOS_SUSTENTAVEIS
-            SET DESCRICAO = :descricao, CUSTO = :custo, STATUS = :status
+            SET DESCRICAO = :descricao, CUSTO = :custo, STATUS = :status, ID_REGIAO = :id_regiao
             WHERE ID_PROJETO = :id_projeto
         """
         cursor.execute(
             query,
-            {"descricao": descricao, "custo": custo, "status": status, "id_projeto": id_projeto},
+            {"descricao": descricao, "custo": custo, "status": status, "id_regiao": id_regiao, "id_projeto": id_projeto},
         )
         conexao.commit()
         print("\n🟢 Projeto atualizado com sucesso!")
