@@ -407,34 +407,34 @@ def main():
     """
     while True:
         exibir_menu()
-        choice = input("Escolha uma opção: ")
-        if choice == "1":
+        opcao = input("Escolha uma opção: ")
+        if opcao == "1":
             inserir_projeto()
-        elif choice == "2":
+        elif opcao == "2":
             atualizar_projeto()
-        elif choice == "3":
+        elif opcao == "3":
             excluir_projeto()
-        elif choice == "4":
+        elif opcao == "4":
             consultar_projetos()
-        elif choice == "5":
+        elif opcao == "5":
             projects = consultar_projetos(para_exportar=True)
             if projects:
                 while True:
                     print("\n=== Exportar Dados ===")
                     print("1. Exportar para JSON")
                     print("2. Exportar para Excel")
-                    export_choice = input("Escolha uma opção (1-2): ")
-                    if export_choice == "1":
+                    export_opcao = input("Escolha uma opção (1-2): ")
+                    if export_opcao == "1":
                         exportar_json(projects)
                         break
-                    elif export_choice == "2":
+                    elif export_opcao == "2":
                         exportar_DataFrame(projects)
                         break
                     else:
                         print("🔴 Opção inválida. Tente novamente.")
             else:
                 print("🔴 Nenhum dado disponível para exportação.")
-        elif choice == "6":
+        elif opcao == "6":
             print("\n🟢 Saindo do sistema...")
             break
         else:
