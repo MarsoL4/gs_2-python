@@ -200,7 +200,7 @@ def inserir_projeto():
 # Atualizar um projeto existente
 def atualizar_projeto():
     """
-    Atualiza um projeto existente no banco de dados.
+    Atualiza um projeto existente no banco de dados com opção de modificar campos específicos em um menu iterativo.
     """
     try:
         limpar_terminal()
@@ -224,68 +224,115 @@ def atualizar_projeto():
 
         if not resultado:
             print("\n🔴 Projeto com o ID informado não encontrado.")
+            input("\nPressione Enter para continuar...")
             return
 
-        # Exibir informações atuais do projeto
-        print("\n=== Informações atuais do projeto ===")
-        print(f"ID: {resultado[0]}")
-        print(f"Descrição: {resultado[1]}")
-        print(f"Custo: R${resultado[2]:,.2f}")
-        print(f"Status: {resultado[3]}")
-        print(f"Região ID: {resultado[4]}")
+        # Valores do projeto
+        projeto_atual = {
+            "ID_PROJETO": resultado[0],
+            "DESCRICAO": resultado[1],
+            "CUSTO": resultado[2],
+            "STATUS": resultado[3],
+            "ID_REGIAO": resultado[4],
+        }
 
-        # Solicitar novas informações
-        descricao = input("\nNova descrição do projeto (pressione Enter para manter): ").strip()
-        descricao = descricao if descricao else resultado[1]
-        print(f"Descrição mantida: {descricao}")
-
-        custo = input("Novo custo do projeto (pressione Enter para manter): ").strip()
-        custo = float(custo) if custo else resultado[2]
-        print(f"Custo mantido: R${custo:,.2f}")
-
-        # Menu para selecionar o novo status do projeto
-        print("\n=== Escolha o novo status do projeto (pressione Enter para manter) ===")
-        print("1. Em andamento")
-        print("2. Concluído")
         while True:
-            status_opcao = input("Escolha uma opção (1-2 ou pressione Enter): ").strip()
-            if status_opcao == "":
-                status = resultado[3]
-                print(f"Status mantido: {status}")
+            # Limpar terminal e mostrar informações atuais do projeto
+            limpar_terminal()
+            print("\n=== Informações atuais do projeto ===")
+            print(f"ID: {projeto_atual['ID_PROJETO']}")
+            print(f"Descrição: {projeto_atual['DESCRICAO']}")
+            print(f"Custo: R${projeto_atual['CUSTO']:,.2f}")
+            print(f"Status: {projeto_atual['STATUS']}")
+            print(f"Região ID: {projeto_atual['ID_REGIAO']}")
+
+            # Menu de opções
+            print("\n=== Escolha o campo que deseja modificar ===")
+            print("1. Descrição")
+            print("2. Custo")
+            print("3. Status")
+            print("4. Região")
+            print("5. Voltar ao menu principal")
+
+            opcao = input("Escolha uma opção (1-5): ").strip()
+
+            if opcao == "1":
+                # Atualizar descrição
+                descricao = input("\nNova descrição do projeto: ").strip()
+                if descricao:
+                    projeto_atual["DESCRICAO"] = descricao
+                    print("\n🟢 Descrição atualizada com sucesso!")
+                else:
+                    print("\n🔴 A descrição não pode ser vazia.")
+
+            elif opcao == "2":
+                # Atualizar custo
+                custo = input("\nNovo custo do projeto: ").strip()
+                if custo:
+                    try:
+                        projeto_atual["CUSTO"] = float(custo)
+                        print("\n🟢 Custo atualizado com sucesso!")
+                    except ValueError:
+                        print("\n🔴 O custo deve ser um número válido.")
+                else:
+                    print("\n🔴 O custo não pode ser vazio.")
+
+            elif opcao == "3":
+                # Atualizar status
+                print("\n=== Escolha o novo status do projeto ===")
+                print("1. Em andamento")
+                print("2. Concluído")
+                while True:
+                    status_opcao = input("Escolha uma opção (1-2): ").strip()
+                    if status_opcao == "1":
+                        projeto_atual["STATUS"] = "Em andamento"
+                        print("\n🟢 Status atualizado para 'Em andamento'.")
+                        break
+                    elif status_opcao == "2":
+                        projeto_atual["STATUS"] = "Concluído"
+                        print("\n🟢 Status atualizado para 'Concluído'.")
+                        break
+                    else:
+                        print("🔴 Opção inválida. Tente novamente.")
+
+            elif opcao == "4":
+                # Atualizar região
+                print("\n=== Escolha a nova região do projeto ===")
+                id_regiao = listar_opcoes("TBL_REGIOES_SUSTENTAVEIS", "ID_REGIAO", "NOME")
+                if id_regiao is not None:
+                    projeto_atual["ID_REGIAO"] = id_regiao
+                    print("\n🟢 Região atualizada com sucesso!")
+
+            elif opcao == "5":
+                # Salvar alterações e sair
+                query = """
+                    UPDATE TBL_PROJETOS_SUSTENTAVEIS
+                    SET DESCRICAO = :descricao, CUSTO = :custo, STATUS = :status, ID_REGIAO = :id_regiao
+                    WHERE ID_PROJETO = :id_projeto
+                """
+                cursor.execute(
+                    query,
+                    {
+                        "descricao": projeto_atual["DESCRICAO"],
+                        "custo": projeto_atual["CUSTO"],
+                        "status": projeto_atual["STATUS"],
+                        "id_regiao": projeto_atual["ID_REGIAO"],
+                        "id_projeto": projeto_atual["ID_PROJETO"],
+                    },
+                )
+                conexao.commit()
+                print("\n🟢 Projeto atualizado com sucesso!")
+                input("\nPressione Enter para continuar...")
                 break
-            elif status_opcao == "1":
-                status = "Em andamento"
-                break
-            elif status_opcao == "2":
-                status = "Concluído"
-                break
+
             else:
-                print("🔴 Opção inválida. Tente novamente.")
+                print("\n🔴 Opção inválida. Tente novamente.")
 
-        # Menu para selecionar a nova região do projeto
-        print("\n=== Escolha a nova região do projeto (pressione Enter para manter) ===")
-        id_regiao = listar_opcoes("TBL_REGIOES_SUSTENTAVEIS", "ID_REGIAO", "NOME")
-        if id_regiao is None:
-            id_regiao = resultado[4]
-            print(f"Região mantida: ID {id_regiao}")
-
-        # Atualizar o projeto no banco de dados
-        query = """
-            UPDATE TBL_PROJETOS_SUSTENTAVEIS
-            SET DESCRICAO = :descricao, CUSTO = :custo, STATUS = :status, ID_REGIAO = :id_regiao
-            WHERE ID_PROJETO = :id_projeto
-        """
-        cursor.execute(
-            query,
-            {"descricao": descricao, "custo": custo, "status": status, "id_regiao": id_regiao, "id_projeto": id_projeto},
-        )
-        conexao.commit()
-        print("\n🟢 Projeto atualizado com sucesso!")
     except Exception as e:
         print(f"\n🔴 Erro ao atualizar projeto: {e}")
+        input("\nPressione Enter para continuar...")
     finally:
         fechar_conexao(conexao)
-        input("\nPressione Enter para continuar...")
 
 # Excluir um projeto
 def excluir_projeto():
