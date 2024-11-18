@@ -150,7 +150,22 @@ def inserir_projeto():
 
         descricao = validar_string_nao_vazia(input("Descrição do projeto: "), "Descrição")
         custo = validar_numero_positivo(input("Custo do projeto: "), "Custo")
-        status = validar_string_nao_vazia(input("Status do projeto: "), "Status")
+        
+        # Menu para selecionar o status do projeto
+        print("\n=== Escolha o status do projeto ===")
+        print("1. Em andamento")
+        print("2. Concluído")
+        while True:
+            status_opcao = input("Escolha uma opção (1-2): ").strip()
+            if status_opcao == "1":
+                status = "Em andamento"
+                break
+            elif status_opcao == "2":
+                status = "Concluído"
+                break
+            else:
+                print("🔴 Opção inválida. Tente novamente.")
+
         id_tipo_fonte = listar_opcoes("TBL_TIPO_FONTES", "ID_TIPO_FONTE", "NOME")
         id_regiao = listar_opcoes("TBL_REGIOES_SUSTENTAVEIS", "ID_REGIAO", "NOME")
 
