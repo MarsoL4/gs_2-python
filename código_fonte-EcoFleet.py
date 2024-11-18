@@ -328,6 +328,30 @@ def atualizar_projeto():
             else:
                 print("\n🔴 Opção inválida. Tente novamente.")
 
+            # Perguntar se deseja modificar mais algum campo
+            alterar_mais = input("\nDeseja modificar mais algum campo? (s/n): ").strip().lower()
+            if alterar_mais != "s":
+                # Salvar alterações antes de sair
+                query = """
+                    UPDATE TBL_PROJETOS_SUSTENTAVEIS
+                    SET DESCRICAO = :descricao, CUSTO = :custo, STATUS = :status, ID_REGIAO = :id_regiao
+                    WHERE ID_PROJETO = :id_projeto
+                """
+                cursor.execute(
+                    query,
+                    {
+                        "descricao": projeto_atual["DESCRICAO"],
+                        "custo": projeto_atual["CUSTO"],
+                        "status": projeto_atual["STATUS"],
+                        "id_regiao": projeto_atual["ID_REGIAO"],
+                        "id_projeto": projeto_atual["ID_PROJETO"],
+                    },
+                )
+                conexao.commit()
+                print("\n🟢 Todas as alterações foram salvas com sucesso!")
+                input("\nPressione Enter para continuar...")
+                break
+
     except Exception as e:
         print(f"\n🔴 Erro ao atualizar projeto: {e}")
         input("\nPressione Enter para continuar...")
