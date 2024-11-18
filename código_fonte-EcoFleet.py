@@ -210,11 +210,49 @@ def atualizar_projeto():
             return
         cursor = conexao.cursor()
 
+        # Selecionar o projeto a ser atualizado
         id_projeto = validar_numero_positivo(input("ID do projeto a ser atualizado: "), "ID do Projeto")
-        descricao = validar_string_nao_vazia(input("Nova descrição do projeto: "), "Descrição")
-        custo = validar_numero_positivo(input("Novo custo do projeto: "), "Custo")
-        status = validar_string_nao_vazia(input("Novo status do projeto: "), "Status")
 
+        # Consultar informações atuais do projeto
+        consulta = """
+            SELECT ID_PROJETO, DESCRICAO, CUSTO, STATUS 
+            FROM RM556310.TBL_PROJETOS_SUSTENTAVEIS
+            WHERE ID_PROJETO = :id_projeto
+        """
+        cursor.execute(consulta, {"id_projeto": id_projeto})
+        resultado = cursor.fetchone()
+
+        if not resultado:
+            print("\n🔴 Projeto com o ID informado não encontrado.")
+            return
+
+        # Exibir informações atuais do projeto
+        print("\n=== Informações atuais do projeto ===")
+        print(f"ID: {resultado[0]}")
+        print(f"Descrição: {resultado[1]}")
+        print(f"Custo: R${resultado[2]:,.2f}")
+        print(f"Status: {resultado[3]}")
+
+        # Solicitar novas informações
+        descricao = validar_string_nao_vazia(input("\nNova descrição do projeto: "), "Descrição")
+        custo = validar_numero_positivo(input("Novo custo do projeto: "), "Custo")
+
+        # Menu para selecionar o novo status do projeto
+        print("\n=== Escolha o novo status do projeto ===")
+        print("1. Em andamento")
+        print("2. Concluído")
+        while True:
+            status_opcao = input("Escolha uma opção (1-2): ").strip()
+            if status_opcao == "1":
+                status = "Em andamento"
+                break
+            elif status_opcao == "2":
+                status = "Concluído"
+                break
+            else:
+                print("🔴 Opção inválida. Tente novamente.")
+
+        # Atualizar o projeto no banco de dados
         query = """
             UPDATE TBL_PROJETOS_SUSTENTAVEIS
             SET DESCRICAO = :descricao, CUSTO = :custo, STATUS = :status
