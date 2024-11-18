@@ -244,16 +244,23 @@ def excluir_projeto():
 
 
 # Consultar projetos
-def consultar_projetos() -> list:
+def consultar_projetos(para_exportar=False) -> list:
     """
     Consulta os projetos no banco de dados e exibe os resultados de forma organizada.
+
+    Parâmetros:
+        para_exportar (bool): Define se o texto deve ser ajustado para exportação ou consulta.
 
     Retorna:
         list: Lista de dicionários com os dados dos projetos.
     """
     try:
-        limpar_terminal()
-        print("\n=== Consultando projetos ===")
+        if para_exportar:
+            print("\n=== Selecione os projetos que deseja exportar ===")
+        else:
+            limpar_terminal()
+            print("\n=== Consultando projetos ===")
+        
         print("1. Todos os projetos")
         print("2. Apenas os projetos em andamento")
         print("3. Apenas os projetos concluídos")
@@ -282,14 +289,20 @@ def consultar_projetos() -> list:
         if not resultados:
             print("\n🔴 Nenhum projeto encontrado.")
         else:
+            if para_exportar:
+                print("\n=== Projetos que serão exportados ===")
             for projeto in resultados:
                 print(f"\nID: {projeto[0]} | Descrição: {projeto[1]} | Custo: R${projeto[2]:,.2f} | Status: {projeto[3]}")
+
+        if not para_exportar:
+            input("\nPressione Enter para continuar...")
+
         return resultados
     finally:
         fechar_conexao(conexao)
 
 # Exportação de Dados para JSON
-def exportar_para_json(dados, nome_arquivo=None):
+def exportar_json(dados, nome_arquivo=None):
     """
     Exporta os dados para um arquivo JSON de forma organizada e legível.
 
@@ -325,9 +338,9 @@ def exportar_para_json(dados, nome_arquivo=None):
 
 
 # Exportação de Dados para Excel
-def exportar_para_excel(dados, nome_arquivo=None):
+def exportar_DataFrame(dados, nome_arquivo=None):
     """
-    Exporta os dados para um arquivo Excel.
+    Exporta os dados para um DataFrame (arquivo .xlsx).
 
     Parâmetros:
         dados (list): Lista de dicionários com os dados a serem exportados.
@@ -358,11 +371,11 @@ def exibir_menu():
     """
     limpar_terminal()
     print("\n=== MENU PRINCIPAL ===")
-    print("1. Inserir Projeto")
-    print("2. Atualizar Projeto")
-    print("3. Excluir Projeto")
-    print("4. Consultar Projetos")
-    print("5. Exportar Dados")
+    print("1. Cadastrar novo Projeto")
+    print("2. Atualizar Projeto Existente")
+    print("3. Excluir Projeto pelo ID")
+    print("4. Consultar Projetos pelo status")
+    print("5. Exportar Projetos para JSON ou DataFrame")
     print("6. Sair")
 
 
@@ -373,40 +386,34 @@ def main():
     """
     while True:
         exibir_menu()
-        escolha = input("Escolha uma opção: ").strip()
-
-        if escolha == "1":
+        choice = input("Escolha uma opção: ")
+        if choice == "1":
             inserir_projeto()
-        elif escolha == "2":
+        elif choice == "2":
             atualizar_projeto()
-        elif escolha == "3":
+        elif choice == "3":
             excluir_projeto()
-        elif escolha == "4":
-            projetos = consultar_projetos()
-            if projetos:
-                input("\nPressione Enter para continuar...")
-        elif escolha == "5":
-            print("")
-            projetos = consultar_projetos()
-            if projetos:
+        elif choice == "4":
+            consultar_projetos()  # Consulta normal
+        elif choice == "5":
+            projects = consultar_projetos(para_exportar=True)  # Ajuste para exportação
+            if projects:
                 while True:
                     print("\n=== Exportar Dados ===")
                     print("1. Exportar para JSON")
                     print("2. Exportar para Excel")
-                    exportacao = input("Escolha uma opção (1-2): ").strip()
-
-                    if exportacao == "1":
-                        exportar_para_json(projetos)
+                    export_choice = input("Escolha uma opção (1-2): ")
+                    if export_choice == "1":
+                        exportar_json(projects)
                         break
-                    elif exportacao == "2":
-                        exportar_para_excel(projetos)
+                    elif export_choice == "2":
+                        exportar_DataFrame(projects)
                         break
                     else:
                         print("🔴 Opção inválida. Tente novamente.")
             else:
-                print("\n🔴 Nenhum dado disponível para exportação.")
-                input("\nPressione Enter para continuar...")
-        elif escolha == "6":
+                print("🔴 Nenhum dado disponível para exportação.")
+        elif choice == "6":
             print("\n🟢 Saindo do sistema...")
             break
         else:
