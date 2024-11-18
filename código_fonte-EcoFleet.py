@@ -413,7 +413,5 @@ def main():
             print("\n🔴 Opção inválida. Tente novamente.")
             input("\nPressione Enter para continuar...")
 
-
-# Executar o programa
-if __name__ == "__main__":
-    main()
+# Executa o programa
+main()
