@@ -318,18 +318,18 @@ def excluir_projeto():
 
 
 # Consultar projetos
-def consultar_projetos(para_exportar=False) -> list:
+def consultar_projetos(export=False) -> list:
     """
     Consulta os projetos no banco de dados e exibe os resultados de forma organizada.
 
     Parâmetros:
-        para_exportar (bool): Define se o texto deve ser ajustado para exportação ou consulta.
+        export (bool): Define se o texto deve ser ajustado para exportação ou consulta.
 
     Retorna:
         list: Lista de dicionários com os dados dos projetos.
     """
     try:
-        if para_exportar:
+        if export:
             print("\n=== Selecione os projetos que deseja exportar ===")
         else:
             limpar_terminal()
@@ -344,10 +344,10 @@ def consultar_projetos(para_exportar=False) -> list:
             print("\n🔴 Opção inválida.")
             return []
 
-        consulta = (
-            "SELECT ID_PROJETO, DESCRICAO, CUSTO, STATUS, ID_TIPO_FONTE, ID_REGIAO "
-            "FROM RM556310.TBL_PROJETOS_SUSTENTAVEIS"
-        )
+        consulta = """
+            SELECT ID_PROJETO, DESCRICAO, CUSTO, STATUS, ID_TIPO_FONTE, ID_REGIAO
+            FROM RM556310.TBL_PROJETOS_SUSTENTAVEIS
+        """
         if escolha == "2":
             consulta += " WHERE STATUS = 'Em andamento'"
         elif escolha == "3":
@@ -363,12 +363,15 @@ def consultar_projetos(para_exportar=False) -> list:
         if not resultados:
             print("\n🔴 Nenhum projeto encontrado.")
         else:
-            if para_exportar:
+            if export:
                 print("\n=== Projetos que serão exportados ===")
             for projeto in resultados:
-                print(f"\nID: {projeto[0]} | Descrição: {projeto[1]} | Custo: R${projeto[2]:,.2f} | Status: {projeto[3]}")
+                print(
+                    f"\nID: {projeto[0]} | Descrição: {projeto[1]} | "
+                    f"Custo: R${projeto[2]:,.2f} | Status: {projeto[3]}"
+                )
 
-        if not para_exportar:
+        if not export:
             input("\nPressione Enter para continuar...")
 
         return resultados
@@ -470,7 +473,7 @@ def main():
         elif opcao == "4":
             consultar_projetos()
         elif opcao == "5":
-            projects = consultar_projetos(para_exportar=True)
+            projects = consultar_projetos(export=True)
             if projects:
                 while True:
                     print("\n=== Exportar Dados ===")
