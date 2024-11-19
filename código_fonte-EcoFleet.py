@@ -31,9 +31,9 @@ def conectarBD() -> oracledb.Connection | None:
 # Encerra a conexão com o banco de dados
 def fechar_conexao(conexao: oracledb.Connection) -> None:
     if conexao:
-        conexao.close()  # Fecha a conexão ativa
+        conexao.close()  # Fecha a conexão com o Banco de Dados
 
-# Lista as opções de uma tabela do banco
+# Lista as opções de uma tabela do banco de dados com mensagens personalizadas
 def listar_opcoes(tabela: str, campo_id: str, campo_nome: str) -> int | None:
     try:
         conexao = conectarBD()  # Abre uma conexão com o banco
@@ -47,8 +47,15 @@ def listar_opcoes(tabela: str, campo_id: str, campo_nome: str) -> int | None:
         resultados = cursor.fetchall()  # Armazena os resultados
 
         if resultados:
+            # Define títulos amigáveis ao usuário
+            if tabela == "TBL_TIPO_FONTES":
+                print("\n=== Selecione o tipo de fonte ===")
+            elif tabela == "TBL_REGIOES_SUSTENTAVEIS":
+                print("\n=== Selecione a região sustentável ===")
+            else:
+                print(f"\n=== Opções disponíveis em {tabela} ===")
+
             # Exibe os resultados formatados como opções para o usuário
-            print(f"\n=== Opções disponíveis em {tabela} ===")
             for index, linha in enumerate(resultados, start=1):
                 print(f"{index}. {linha[1]}")
 
@@ -71,7 +78,7 @@ def listar_opcoes(tabela: str, campo_id: str, campo_nome: str) -> int | None:
         print(f"\n🔴 Erro ao listar opções na tabela {tabela}: {e}")
         return None
     finally:
-        fechar_conexao(conexao)  # Fecha a conexão com o Banco
+        fechar_conexao(conexao)  # Fecha a conexão com o Banco de Dados
 
 # Valida números positivos
 def validar_numero_positivo(valor: str, nome_campo: str) -> float:
@@ -155,9 +162,9 @@ def inserir_projeto() -> None:
         # Mensagem de erro em caso de falha
         print(f"\n🔴 Erro ao inserir projeto: {e}")
     finally:
-        fechar_conexao(conexao)  # Fecha a conexão
+        fechar_conexao(conexao)  # Fecha a conexão com o Banco de Dados
         input("\nPressione Enter para continuar...")
-
+        
 # Atualiza um projeto existente no Banco de Dados
 def atualizar_projeto() -> None:
     try:
@@ -314,7 +321,7 @@ def atualizar_projeto() -> None:
         print(f"\n🔴 Erro ao atualizar projeto: {e}")
         input("\nPressione Enter para continuar...")
     finally:
-        fechar_conexao(conexao)  # Fecha a conexão
+        fechar_conexao(conexao)  # Fecha a conexão com o Banco de Dados
 
 # Exclui um projeto existente do Banco de Dados
 def excluir_projeto() -> None:
@@ -359,7 +366,7 @@ def excluir_projeto() -> None:
         # Exibe mensagem de erro em caso de falha
         print(f"\n🔴 Erro ao excluir projeto: {e}")
     finally:
-        fechar_conexao(conexao)  # Fecha a conexão
+        fechar_conexao(conexao)  # Fecha a conexão com o Banco de Dados
         input("\nPressione Enter para continuar...")
 
 # Consulta os projetos existentes no Banco de Dados
@@ -415,7 +422,7 @@ def consultar_projetos(export: bool = False) -> list:
 
         return resultados  # Retorna a lista de resultados
     finally:
-        fechar_conexao(conexao)  # Fecha a conexão ao término
+        fechar_conexao(conexao)  # Fecha a conexão com o Banco de Dados
 
 # Exporta projetos selecionados para um arquivo JSON
 def exportar_json(dados: list, nome_arquivo: str = None) -> None:
