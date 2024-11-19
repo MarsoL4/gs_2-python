@@ -10,61 +10,68 @@ import os
 
 # Limpa o terminal para uma exibição mais limpa
 def limpar_terminal() -> None:
+    # Determina o comando para limpar o terminal dependendo do sistema operacional
     os.system("cls" if os.name == "nt" else "clear")
 
 # Estabelece conexão com o Banco de Dados
 def conectarBD() -> oracledb.Connection | None:
     try:
+        # Conecta ao banco de dados usando as credenciais fornecidas
         conn = oracledb.connect(
             user="RM556310",
             password="130206",
             dsn="(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=oracle.fiap.com.br)(PORT=1521))(CONNECT_DATA=(SID=ORCL)))",
         )
-        return conn
+        return conn  # Retorna a conexão ativa
     except oracledb.Error as e:
+        # Exibe mensagem de erro caso a conexão falhe
         print(f"\n🔴 Erro ao conectar ao banco de dados: {e}")
         return None
 
-# Encerra a conexão com o banco de dados.
+# Encerra a conexão com o banco de dados
 def fechar_conexao(conexao: oracledb.Connection) -> None:
     if conexao:
-        conexao.close()
+        conexao.close()  # Fecha a conexão ativa
 
 # Lista as opções de uma tabela do banco
 def listar_opcoes(tabela: str, campo_id: str, campo_nome: str) -> int | None:
     try:
-        conexao = conectarBD()
+        conexao = conectarBD()  # Abre uma conexão com o banco
         if not conexao:
             return None
         cursor = conexao.cursor()
 
+        # Monta e executa a query para buscar os dados da tabela
         query = f"SELECT {campo_id}, {campo_nome} FROM {tabela}"
         cursor.execute(query)
-        resultados = cursor.fetchall()
+        resultados = cursor.fetchall()  # Armazena os resultados
 
         if resultados:
+            # Exibe os resultados formatados como opções para o usuário
             print(f"\n=== Opções disponíveis em {tabela} ===")
             for index, linha in enumerate(resultados, start=1):
                 print(f"{index}. {linha[1]}")
 
+            # Solicita que o usuário escolha uma opção válida
             while True:
                 try:
                     escolha = int(input(f"Escolha uma opção (1 a {len(resultados)}): "))
                     if 1 <= escolha <= len(resultados):
-                        return resultados[escolha - 1][0]
+                        return resultados[escolha - 1][0]  # Retorna o ID da opção escolhida
                     else:
                         print("🔴 Opção inválida. Tente novamente.")
                 except ValueError:
                     print("🔴 Entrada inválida. Por favor, insira um número.")
         else:
+            # Caso nenhum dado seja encontrado na tabela
             print(f"🔴 Nenhum dado encontrado na tabela {tabela}.")
             return None
     except Exception as e:
+        # Captura e exibe mensagens de erro durante a execução
         print(f"\n🔴 Erro ao listar opções na tabela {tabela}: {e}")
         return None
     finally:
-        fechar_conexao(conexao)
-
+        fechar_conexao(conexao)  # Fecha a conexão após o término
 
 # Valida números positivos
 def validar_numero_positivo(valor: str, nome_campo: str) -> float:
