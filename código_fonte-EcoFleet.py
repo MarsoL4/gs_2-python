@@ -178,7 +178,7 @@ def atualizar_projeto() -> None:
         # Solicita o ID do projeto a ser atualizado
         id_projeto = validar_numero_positivo(input("ID do projeto a ser atualizado: "), "ID do Projeto")
 
-        # Consulta as informações do projeto para exibir ao usuário
+        # Consulta informações atuais do projeto
         consulta = """
             SELECT ID_PROJETO, DESCRICAO, CUSTO, STATUS, ID_REGIAO 
             FROM RM556310.TBL_PROJETOS_SUSTENTAVEIS
@@ -192,24 +192,36 @@ def atualizar_projeto() -> None:
             input("\nPressione Enter para continuar...")
             return
 
-        # Carrega os dados atuais do projeto
+        # Consulta o nome da região com base no ID_REGIAO
+        consulta_regiao = """
+            SELECT NOME FROM TBL_REGIOES_SUSTENTAVEIS WHERE ID_REGIAO = :id_regiao
+        """
+        cursor.execute(consulta_regiao, {"id_regiao": resultado[4]})
+        regiao = cursor.fetchone()
+        regiao_nome = regiao[0] if regiao else "Desconhecida"
+
+        # Carrega os dados do projeto
         projeto_atual = {
             "ID_PROJETO": resultado[0],
             "DESCRICAO": resultado[1],
             "CUSTO": resultado[2],
             "STATUS": resultado[3],
             "ID_REGIAO": resultado[4],
+            "REGIAO_NOME": regiao_nome,
         }
 
+        # Cria uma cópia para verificar alterações
+        projeto_inicial = projeto_atual.copy()
+
         while True:
-            limpar_terminal()  # Limpa o terminal para mostrar os dados do projeto
+            limpar_terminal() #Limpa o terminal para a melhor visualização dos dados atuais do projeto
             print("\n=== Informações atuais do projeto ===")
             # Exibe os dados do projeto
             print(f"ID: {projeto_atual['ID_PROJETO']}")
             print(f"Descrição: {projeto_atual['DESCRICAO']}")
             print(f"Custo: R${projeto_atual['CUSTO']:,.2f}")
             print(f"Status: {projeto_atual['STATUS']}")
-            print(f"Região ID: {projeto_atual['ID_REGIAO']}")
+            print(f"Região ID: {projeto_atual['ID_REGIAO']} ({projeto_atual['REGIAO_NOME']})")
 
             # Menu de opções para atualizar os campos
             print("\n=== Escolha o campo que deseja modificar ===")
@@ -265,54 +277,65 @@ def atualizar_projeto() -> None:
                 print("\n=== Escolha a nova região do projeto ===")
                 id_regiao = listar_opcoes("TBL_REGIOES_SUSTENTAVEIS", "ID_REGIAO", "NOME")
                 if id_regiao is not None:
+                    # Atualiza o ID e busca o nome correspondente
                     projeto_atual["ID_REGIAO"] = id_regiao
+                    cursor.execute(consulta_regiao, {"id_regiao": id_regiao})
+                    nova_regiao = cursor.fetchone()
+                    projeto_atual["REGIAO_NOME"] = nova_regiao[0] if nova_regiao else "Desconhecida"
                     print("\n🟢 Região atualizada com sucesso!")
 
             elif opcao == "5":
-                # Atualiza os dados no banco de dados e sai do loop
-                query = """
-                    UPDATE TBL_PROJETOS_SUSTENTAVEIS
-                    SET DESCRICAO = :descricao, CUSTO = :custo, STATUS = :status, ID_REGIAO = :id_regiao
-                    WHERE ID_PROJETO = :id_projeto
-                """
-                cursor.execute(
-                    query,
-                    {
-                        "descricao": projeto_atual["DESCRICAO"],
-                        "custo": projeto_atual["CUSTO"],
-                        "status": projeto_atual["STATUS"],
-                        "id_regiao": projeto_atual["ID_REGIAO"],
-                        "id_projeto": projeto_atual["ID_PROJETO"],
-                    },
-                )
-                conexao.commit()  # Salva as alterações no banco de dados
-                print("\n🟢 Projeto atualizado com sucesso!")
+                # Verifica se houve alterações antes de salvar
+                if projeto_atual == projeto_inicial:
+                    print("\n🔵 Nenhuma alteração foi realizada.")
+                else:
+                    # Salva as alterações no banco de dados
+                    query = """
+                        UPDATE TBL_PROJETOS_SUSTENTAVEIS
+                        SET DESCRICAO = :descricao, CUSTO = :custo, STATUS = :status, ID_REGIAO = :id_regiao
+                        WHERE ID_PROJETO = :id_projeto
+                    """
+                    cursor.execute(
+                        query,
+                        {
+                            "descricao": projeto_atual["DESCRICAO"],
+                            "custo": projeto_atual["CUSTO"],
+                            "status": projeto_atual["STATUS"],
+                            "id_regiao": projeto_atual["ID_REGIAO"],
+                            "id_projeto": projeto_atual["ID_PROJETO"],
+                        },
+                    )
+                    conexao.commit()
+                    print("\n🟢 Projeto atualizado com sucesso!")
                 input("\nPressione Enter para continuar...")
                 break
             else:
                 print("\n🔴 Opção inválida. Tente novamente.")
 
-            # Verifica se o usuário deseja continuar alterando
+            # Pergunta se o usuário deseja alterar mais campos
             alterar_mais = input("\nDeseja modificar mais algum campo? (s/n): ").strip().lower()
             if alterar_mais != "s":
-                # Atualiza os dados antes de sair do loop
-                query = """
-                    UPDATE TBL_PROJETOS_SUSTENTAVEIS
-                    SET DESCRICAO = :descricao, CUSTO = :custo, STATUS = :status, ID_REGIAO = :id_regiao
-                    WHERE ID_PROJETO = :id_projeto
-                """
-                cursor.execute(
-                    query,
-                    {
-                        "descricao": projeto_atual["DESCRICAO"],
-                        "custo": projeto_atual["CUSTO"],
-                        "status": projeto_atual["STATUS"],
-                        "id_regiao": projeto_atual["ID_REGIAO"],
-                        "id_projeto": projeto_atual["ID_PROJETO"],
-                    },
-                )
-                conexao.commit()  # Salva as alterações
-                print("\n🟢 Todas as alterações foram salvas com sucesso!")
+                # Verifica novamente alterações antes de sair
+                if projeto_atual != projeto_inicial:
+                    query = """
+                        UPDATE TBL_PROJETOS_SUSTENTAVEIS
+                        SET DESCRICAO = :descricao, CUSTO = :custo, STATUS = :status, ID_REGIAO = :id_regiao
+                        WHERE ID_PROJETO = :id_projeto
+                    """
+                    cursor.execute(
+                        query,
+                        {
+                            "descricao": projeto_atual["DESCRICAO"],
+                            "custo": projeto_atual["CUSTO"],
+                            "status": projeto_atual["STATUS"],
+                            "id_regiao": projeto_atual["ID_REGIAO"],
+                            "id_projeto": projeto_atual["ID_PROJETO"],
+                        },
+                    )
+                    conexao.commit()
+                    print("\n🟢 Todas as alterações foram salvas com sucesso!")
+                else:
+                    print("\n🔵 Nenhuma alteração foi realizada.")
                 input("\nPressione Enter para continuar...")
                 break
 
