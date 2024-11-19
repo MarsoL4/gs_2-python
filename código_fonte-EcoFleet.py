@@ -180,9 +180,18 @@ def atualizar_projeto() -> None:
 
         # Consulta informações atuais do projeto
         consulta = """
-            SELECT ID_PROJETO, DESCRICAO, CUSTO, STATUS, ID_REGIAO 
-            FROM RM556310.TBL_PROJETOS_SUSTENTAVEIS
-            WHERE ID_PROJETO = :id_projeto
+            SELECT 
+                p.ID_PROJETO, 
+                p.DESCRICAO, 
+                p.CUSTO, 
+                p.STATUS, 
+                p.ID_REGIAO, 
+                r.NOME AS REGIAO, 
+                tf.NOME AS TIPO_FONTE
+            FROM RM556310.TBL_PROJETOS_SUSTENTAVEIS p
+            JOIN TBL_REGIOES_SUSTENTAVEIS r ON p.ID_REGIAO = r.ID_REGIAO
+            JOIN TBL_TIPO_FONTES tf ON p.ID_TIPO_FONTE = tf.ID_TIPO_FONTE
+            WHERE p.ID_PROJETO = :id_projeto
         """
         cursor.execute(consulta, {"id_projeto": id_projeto})
         resultado = cursor.fetchone()
@@ -192,14 +201,6 @@ def atualizar_projeto() -> None:
             input("\nPressione Enter para continuar...")
             return
 
-        # Consulta o nome da região com base no ID_REGIAO
-        consulta_regiao = """
-            SELECT NOME FROM TBL_REGIOES_SUSTENTAVEIS WHERE ID_REGIAO = :id_regiao
-        """
-        cursor.execute(consulta_regiao, {"id_regiao": resultado[4]})
-        regiao = cursor.fetchone()
-        regiao_nome = regiao[0] if regiao else "Desconhecida"
-
         # Carrega os dados do projeto
         projeto_atual = {
             "ID_PROJETO": resultado[0],
@@ -207,21 +208,23 @@ def atualizar_projeto() -> None:
             "CUSTO": resultado[2],
             "STATUS": resultado[3],
             "ID_REGIAO": resultado[4],
-            "REGIAO_NOME": regiao_nome,
+            "REGIAO": resultado[5],
+            "TIPO_FONTE": resultado[6],
         }
 
-        # Cria uma cópia para verificar alterações
+        # Clona os dados originais para verificar alterações posteriormente
         projeto_inicial = projeto_atual.copy()
 
         while True:
-            limpar_terminal() #Limpa o terminal para a melhor visualização dos dados atuais do projeto
+            limpar_terminal()  # Limpa o terminal para exibição organizada
             print("\n=== Informações atuais do projeto ===")
             # Exibe os dados do projeto
             print(f"ID: {projeto_atual['ID_PROJETO']}")
             print(f"Descrição: {projeto_atual['DESCRICAO']}")
             print(f"Custo: R${projeto_atual['CUSTO']:,.2f}")
             print(f"Status: {projeto_atual['STATUS']}")
-            print(f"Região ID: {projeto_atual['ID_REGIAO']} ({projeto_atual['REGIAO_NOME']})")
+            print(f"Tipo de Fonte: {projeto_atual['TIPO_FONTE']}")
+            print(f"Região: {projeto_atual['REGIAO']}")
 
             # Menu de opções para atualizar os campos
             print("\n=== Escolha o campo que deseja modificar ===")
@@ -277,19 +280,18 @@ def atualizar_projeto() -> None:
                 print("\n=== Escolha a nova região do projeto ===")
                 id_regiao = listar_opcoes("TBL_REGIOES_SUSTENTAVEIS", "ID_REGIAO", "NOME")
                 if id_regiao is not None:
-                    # Atualiza o ID e busca o nome correspondente
-                    projeto_atual["ID_REGIAO"] = id_regiao
+                    # Atualiza o nome da região
+                    consulta_regiao = """
+                        SELECT NOME FROM TBL_REGIOES_SUSTENTAVEIS WHERE ID_REGIAO = :id_regiao
+                    """
                     cursor.execute(consulta_regiao, {"id_regiao": id_regiao})
                     nova_regiao = cursor.fetchone()
-                    projeto_atual["REGIAO_NOME"] = nova_regiao[0] if nova_regiao else "Desconhecida"
+                    projeto_atual["REGIAO"] = nova_regiao[0] if nova_regiao else "Desconhecida"
                     print("\n🟢 Região atualizada com sucesso!")
 
             elif opcao == "5":
-                # Verifica se houve alterações antes de salvar
-                if projeto_atual == projeto_inicial:
-                    print("\n🔵 Nenhuma alteração foi realizada.")
-                else:
-                    # Salva as alterações no banco de dados
+                # Salva as alterações no banco de dados e encerra
+                if projeto_atual != projeto_inicial:
                     query = """
                         UPDATE TBL_PROJETOS_SUSTENTAVEIS
                         SET DESCRICAO = :descricao, CUSTO = :custo, STATUS = :status, ID_REGIAO = :id_regiao
@@ -301,12 +303,14 @@ def atualizar_projeto() -> None:
                             "descricao": projeto_atual["DESCRICAO"],
                             "custo": projeto_atual["CUSTO"],
                             "status": projeto_atual["STATUS"],
-                            "id_regiao": projeto_atual["ID_REGIAO"],
+                            "id_regiao": id_regiao,
                             "id_projeto": projeto_atual["ID_PROJETO"],
                         },
                     )
                     conexao.commit()
                     print("\n🟢 Projeto atualizado com sucesso!")
+                else:
+                    print("\n🔵 Nenhuma alteração foi realizada.")
                 input("\nPressione Enter para continuar...")
                 break
             else:
@@ -315,7 +319,7 @@ def atualizar_projeto() -> None:
             # Pergunta se o usuário deseja alterar mais campos
             alterar_mais = input("\nDeseja modificar mais algum campo? (s/n): ").strip().lower()
             if alterar_mais != "s":
-                # Verifica novamente alterações antes de sair
+                # Salva as alterações antes de sair, se necessário
                 if projeto_atual != projeto_inicial:
                     query = """
                         UPDATE TBL_PROJETOS_SUSTENTAVEIS
@@ -413,13 +417,21 @@ def consultar_projetos(export: bool = False) -> list:
 
         # Monta a consulta SQL com base na escolha do usuário
         consulta = """
-            SELECT ID_PROJETO, DESCRICAO, CUSTO, STATUS, ID_TIPO_FONTE, ID_REGIAO
-            FROM RM556310.TBL_PROJETOS_SUSTENTAVEIS
+            SELECT 
+                p.ID_PROJETO, 
+                p.DESCRICAO, 
+                p.CUSTO, 
+                p.STATUS, 
+                tf.NOME AS TIPO_FONTE, 
+                r.NOME AS REGIAO
+            FROM RM556310.TBL_PROJETOS_SUSTENTAVEIS p
+            JOIN TBL_TIPO_FONTES tf ON p.ID_TIPO_FONTE = tf.ID_TIPO_FONTE
+            JOIN TBL_REGIOES_SUSTENTAVEIS r ON p.ID_REGIAO = r.ID_REGIAO
         """
         if escolha == "2":
-            consulta += " WHERE STATUS = 'Em andamento'"  # Filtra projetos em andamento
+            consulta += " WHERE p.STATUS = 'Em andamento'"  # Filtra projetos em andamento
         elif escolha == "3":
-            consulta += " WHERE STATUS = 'Concluído'"  # Filtra projetos concluídos
+            consulta += " WHERE p.STATUS = 'Concluído'"  # Filtra projetos concluídos
 
         conexao = conectarBD()  # Conecta ao banco de dados
         if not conexao:
@@ -437,7 +449,8 @@ def consultar_projetos(export: bool = False) -> list:
             for projeto in resultados:
                 print(
                     f"\nID: {projeto[0]} | Descrição: {projeto[1]} | "
-                    f"Custo: R${projeto[2]:,.2f} | Status: {projeto[3]}"
+                    f"Custo: R${projeto[2]:,.2f} | Status: {projeto[3]} | "
+                    f"Tipo de Fonte: {projeto[4]} | Região: {projeto[5]}"
                 )
 
         if not export:
