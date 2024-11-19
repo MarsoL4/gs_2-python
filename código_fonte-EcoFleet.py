@@ -6,7 +6,7 @@ import os
 
 
 # Função para limpar o terminal
-def limpar_terminal():
+def limpar_terminal() -> None:
     """
     Limpa o terminal para melhor organização visual.
     """
@@ -14,7 +14,7 @@ def limpar_terminal():
 
 
 # Conexão com o Banco de Dados Oracle
-def conectarBD():
+def conectarBD() -> oracledb.Connection | None:
     """
     Estabelece conexão com o banco de dados Oracle.
 
@@ -34,7 +34,7 @@ def conectarBD():
 
 
 # Fechar a conexão com o banco
-def fechar_conexao(conexao):
+def fechar_conexao(conexao: oracledb.Connection) -> None:
     """
     Encerra a conexão com o banco de dados.
 
@@ -46,7 +46,7 @@ def fechar_conexao(conexao):
 
 
 # Listar opções de tabelas
-def listar_opcoes(tabela, campo_id, campo_nome):
+def listar_opcoes(tabela: str, campo_id: str, campo_nome: str) -> int | None:
     """
     Lista as opções de uma tabela e retorna o ID correspondente à escolha do usuário.
 
@@ -93,7 +93,7 @@ def listar_opcoes(tabela, campo_id, campo_nome):
 
 
 # Validação de números positivos
-def validar_numero_positivo(valor, nome_campo):
+def validar_numero_positivo(valor: str, nome_campo: str) -> float:
     """
     Valida se um valor é um número positivo.
 
@@ -116,7 +116,7 @@ def validar_numero_positivo(valor, nome_campo):
 
 
 # Validação de strings não vazias
-def validar_string_nao_vazia(valor, nome_campo):
+def validar_string_nao_vazia(valor: str, nome_campo: str) -> str:
     """
     Valida se uma string não está vazia.
 
@@ -136,7 +136,7 @@ def validar_string_nao_vazia(valor, nome_campo):
 
 
 # Inserir um novo projeto
-def inserir_projeto():
+def inserir_projeto() -> None:
     """
     Insere um novo projeto no banco de dados.
     """
@@ -198,7 +198,7 @@ def inserir_projeto():
 
 
 # Atualizar um projeto existente
-def atualizar_projeto():
+def atualizar_projeto() -> None:
     """
     Atualiza um projeto existente no banco de dados com opção de modificar campos específicos em um menu iterativo.
     """
@@ -359,7 +359,7 @@ def atualizar_projeto():
         fechar_conexao(conexao)
 
 # Excluir um projeto
-def excluir_projeto():
+def excluir_projeto() -> None:
     """
     Exclui um projeto do banco de dados, após confirmação do usuário.
     """
@@ -406,7 +406,7 @@ def excluir_projeto():
 
 
 # Consultar projetos
-def consultar_projetos(export=False) -> list:
+def consultar_projetos(export: bool = False) -> list:
     """
     Consulta os projetos no banco de dados e exibe os resultados de forma organizada.
 
@@ -467,7 +467,7 @@ def consultar_projetos(export=False) -> list:
         fechar_conexao(conexao)
 
 # Exportação de Dados para JSON
-def exportar_json(dados, nome_arquivo=None):
+def exportar_json(dados: list, nome_arquivo: str = None) -> None:
     """
     Exporta os dados para um arquivo JSON de forma organizada e legível.
 
@@ -503,7 +503,7 @@ def exportar_json(dados, nome_arquivo=None):
 
 
 # Exportação de Dados para Excel
-def exportar_DataFrame(dados, nome_arquivo=None):
+def exportar_DataFrame(dados: list, nome_arquivo:str = None) -> None:
     """
     Exporta os dados para um DataFrame (arquivo .xlsx).
 
@@ -530,7 +530,7 @@ def exportar_DataFrame(dados, nome_arquivo=None):
 
 
 # Menu Principal
-def exibir_menu():
+def exibir_menu()-> None:
     """
     Exibe o menu principal.
     """
@@ -545,7 +545,7 @@ def exibir_menu():
 
 
 # Função Principal
-def main():
+def main() -> None:
     """
     Função principal que controla o fluxo do programa.
     """
