@@ -185,12 +185,13 @@ def atualizar_projeto() -> None:
                 p.DESCRICAO, 
                 p.CUSTO, 
                 p.STATUS, 
+                p.ID_TIPO_FONTE, 
+                tf.NOME AS TIPO_FONTE, 
                 p.ID_REGIAO, 
-                r.NOME AS REGIAO, 
-                tf.NOME AS TIPO_FONTE
+                r.NOME AS REGIAO
             FROM RM556310.TBL_PROJETOS_SUSTENTAVEIS p
-            JOIN TBL_REGIOES_SUSTENTAVEIS r ON p.ID_REGIAO = r.ID_REGIAO
             JOIN TBL_TIPO_FONTES tf ON p.ID_TIPO_FONTE = tf.ID_TIPO_FONTE
+            JOIN TBL_REGIOES_SUSTENTAVEIS r ON p.ID_REGIAO = r.ID_REGIAO
             WHERE p.ID_PROJETO = :id_projeto
         """
         cursor.execute(consulta, {"id_projeto": id_projeto})
@@ -207,9 +208,10 @@ def atualizar_projeto() -> None:
             "DESCRICAO": resultado[1],
             "CUSTO": resultado[2],
             "STATUS": resultado[3],
-            "ID_REGIAO": resultado[4],
-            "REGIAO": resultado[5],
-            "TIPO_FONTE": resultado[6],
+            "ID_TIPO_FONTE": resultado[4],
+            "TIPO_FONTE": resultado[5],
+            "ID_REGIAO": resultado[6],
+            "REGIAO": resultado[7],
         }
 
         # Clona os dados originais para verificar alterações posteriormente
@@ -218,23 +220,24 @@ def atualizar_projeto() -> None:
         while True:
             limpar_terminal()  # Limpa o terminal para exibição organizada
             print("\n=== Informações atuais do projeto ===")
-            # Exibe os dados do projeto
+            # Exibe os dados do projeto no formato correto
             print(f"ID: {projeto_atual['ID_PROJETO']}")
             print(f"Descrição: {projeto_atual['DESCRICAO']}")
             print(f"Custo: R${projeto_atual['CUSTO']:,.2f}")
             print(f"Status: {projeto_atual['STATUS']}")
-            print(f"Tipo de Fonte: {projeto_atual['TIPO_FONTE']}")
-            print(f"Região: {projeto_atual['REGIAO']}")
+            print(f"Tipo de Fonte ID: {projeto_atual['ID_TIPO_FONTE']} ({projeto_atual['TIPO_FONTE']})")
+            print(f"Região ID: {projeto_atual['ID_REGIAO']} ({projeto_atual['REGIAO']})")
 
             # Menu de opções para atualizar os campos
             print("\n=== Escolha o campo que deseja modificar ===")
             print("1. Descrição")
             print("2. Custo")
             print("3. Status")
-            print("4. Região")
-            print("5. Voltar ao menu principal")
+            print("4. Tipo de Fonte")
+            print("5. Região")
+            print("6. Voltar ao menu principal")
 
-            opcao = input("Escolha uma opção (1-5): ").strip()
+            opcao = input("Escolha uma opção (1-6): ").strip()
 
             if opcao == "1":
                 # Atualizar descrição
@@ -276,11 +279,25 @@ def atualizar_projeto() -> None:
                         print("🔴 Opção inválida. Tente novamente.")
 
             elif opcao == "4":
+                # Atualizar tipo de fonte
+                print("\n=== Escolha o novo tipo de fonte ===")
+                id_tipo_fonte = listar_opcoes("TBL_TIPO_FONTES", "ID_TIPO_FONTE", "NOME")
+                if id_tipo_fonte is not None:
+                    projeto_atual["ID_TIPO_FONTE"] = id_tipo_fonte
+                    consulta_tipo = """
+                        SELECT NOME FROM TBL_TIPO_FONTES WHERE ID_TIPO_FONTE = :id_tipo_fonte
+                    """
+                    cursor.execute(consulta_tipo, {"id_tipo_fonte": id_tipo_fonte})
+                    novo_tipo = cursor.fetchone()
+                    projeto_atual["TIPO_FONTE"] = novo_tipo[0] if novo_tipo else "Desconhecido"
+                    print("\n🟢 Tipo de fonte atualizado com sucesso!")
+
+            elif opcao == "5":
                 # Atualizar região
                 print("\n=== Escolha a nova região do projeto ===")
                 id_regiao = listar_opcoes("TBL_REGIOES_SUSTENTAVEIS", "ID_REGIAO", "NOME")
                 if id_regiao is not None:
-                    # Atualiza o nome da região
+                    projeto_atual["ID_REGIAO"] = id_regiao
                     consulta_regiao = """
                         SELECT NOME FROM TBL_REGIOES_SUSTENTAVEIS WHERE ID_REGIAO = :id_regiao
                     """
@@ -289,12 +306,13 @@ def atualizar_projeto() -> None:
                     projeto_atual["REGIAO"] = nova_regiao[0] if nova_regiao else "Desconhecida"
                     print("\n🟢 Região atualizada com sucesso!")
 
-            elif opcao == "5":
+            elif opcao == "6":
                 # Salva as alterações no banco de dados e encerra
                 if projeto_atual != projeto_inicial:
                     query = """
                         UPDATE TBL_PROJETOS_SUSTENTAVEIS
-                        SET DESCRICAO = :descricao, CUSTO = :custo, STATUS = :status, ID_REGIAO = :id_regiao
+                        SET DESCRICAO = :descricao, CUSTO = :custo, STATUS = :status, 
+                            ID_TIPO_FONTE = :id_tipo_fonte, ID_REGIAO = :id_regiao
                         WHERE ID_PROJETO = :id_projeto
                     """
                     cursor.execute(
@@ -303,7 +321,8 @@ def atualizar_projeto() -> None:
                             "descricao": projeto_atual["DESCRICAO"],
                             "custo": projeto_atual["CUSTO"],
                             "status": projeto_atual["STATUS"],
-                            "id_regiao": id_regiao,
+                            "id_tipo_fonte": projeto_atual["ID_TIPO_FONTE"],
+                            "id_regiao": projeto_atual["ID_REGIAO"],
                             "id_projeto": projeto_atual["ID_PROJETO"],
                         },
                     )
@@ -319,11 +338,12 @@ def atualizar_projeto() -> None:
             # Pergunta se o usuário deseja alterar mais campos
             alterar_mais = input("\nDeseja modificar mais algum campo? (s/n): ").strip().lower()
             if alterar_mais != "s":
-                # Salva as alterações antes de sair, se necessário
                 if projeto_atual != projeto_inicial:
+                    # Salva alterações
                     query = """
                         UPDATE TBL_PROJETOS_SUSTENTAVEIS
-                        SET DESCRICAO = :descricao, CUSTO = :custo, STATUS = :status, ID_REGIAO = :id_regiao
+                        SET DESCRICAO = :descricao, CUSTO = :custo, STATUS = :status, 
+                            ID_TIPO_FONTE = :id_tipo_fonte, ID_REGIAO = :id_regiao
                         WHERE ID_PROJETO = :id_projeto
                     """
                     cursor.execute(
@@ -332,6 +352,7 @@ def atualizar_projeto() -> None:
                             "descricao": projeto_atual["DESCRICAO"],
                             "custo": projeto_atual["CUSTO"],
                             "status": projeto_atual["STATUS"],
+                            "id_tipo_fonte": projeto_atual["ID_TIPO_FONTE"],
                             "id_regiao": projeto_atual["ID_REGIAO"],
                             "id_projeto": projeto_atual["ID_PROJETO"],
                         },
@@ -422,7 +443,9 @@ def consultar_projetos(export: bool = False) -> list:
                 p.DESCRICAO, 
                 p.CUSTO, 
                 p.STATUS, 
+                tf.ID_TIPO_FONTE, 
                 tf.NOME AS TIPO_FONTE, 
+                r.ID_REGIAO, 
                 r.NOME AS REGIAO
             FROM RM556310.TBL_PROJETOS_SUSTENTAVEIS p
             JOIN TBL_TIPO_FONTES tf ON p.ID_TIPO_FONTE = tf.ID_TIPO_FONTE
@@ -450,7 +473,7 @@ def consultar_projetos(export: bool = False) -> list:
                 print(
                     f"\nID: {projeto[0]} | Descrição: {projeto[1]} | "
                     f"Custo: R${projeto[2]:,.2f} | Status: {projeto[3]} | "
-                    f"Tipo de Fonte: {projeto[4]} | Região: {projeto[5]}"
+                    f"Tipo de Fonte ID: {projeto[4]} ({projeto[5]}) | Região ID: {projeto[6]} ({projeto[7]})"
                 )
 
         if not export:
@@ -475,8 +498,8 @@ def exportar_json(dados: list, nome_arquivo: str = None) -> None:
                     "DESCRICAO": item[1],
                     "CUSTO": item[2],
                     "STATUS": item[3],
-                    "ID_TIPO_FONTE": item[4],
-                    "ID_REGIAO": item[5]
+                    "ID_TIPO_FONTE": item[4],  # Apenas o ID
+                    "ID_REGIAO": item[6]  # Apenas o ID
                 }
                 for item in dados
             ]
@@ -499,9 +522,19 @@ def exportar_DataFrame(dados: list, nome_arquivo: str = None) -> None:
 
         # Converte os dados para um DataFrame do pandas
         df = pd.DataFrame(
-            dados,
-            columns=["ID_PROJETO", "DESCRICAO", "CUSTO", "STATUS", "ID_TIPO_FONTE", "ID_REGIAO"],
+            [
+                {
+                    "ID_PROJETO": item[0],
+                    "DESCRICAO": item[1],
+                    "CUSTO": item[2],
+                    "STATUS": item[3],
+                    "ID_TIPO_FONTE": item[4],  # Apenas o ID
+                    "ID_REGIAO": item[6]  # Apenas o ID
+                }
+                for item in dados
+            ]
         )
+
         # Exporta o DataFrame para um arquivo Excel
         df.to_excel(nome_arquivo, index=False, engine="openpyxl")
         print(f"\n🟢 Dados exportados para o arquivo: {nome_arquivo}")
