@@ -1,3 +1,4 @@
+# ================================ Imports ================================ 
 import oracledb
 import json
 import pandas as pd
@@ -5,22 +6,14 @@ from datetime import datetime
 import os
 
 
-# Função para limpar o terminal
+# ============================== Subalgoritmos ============================
+
+# Limpa o terminal para uma exibição mais limpa
 def limpar_terminal() -> None:
-    """
-    Limpa o terminal para melhor organização visual.
-    """
     os.system("cls" if os.name == "nt" else "clear")
 
-
-# Conexão com o Banco de Dados Oracle
+# Estabelece conexão com o Banco de Dados
 def conectarBD() -> oracledb.Connection | None:
-    """
-    Estabelece conexão com o banco de dados Oracle.
-
-    Retorna:
-        Uma conexão ativa ou None em caso de erro.
-    """
     try:
         conn = oracledb.connect(
             user="RM556310",
@@ -32,32 +25,13 @@ def conectarBD() -> oracledb.Connection | None:
         print(f"\n🔴 Erro ao conectar ao banco de dados: {e}")
         return None
 
-
-# Fechar a conexão com o banco
+# Encerra a conexão com o banco de dados.
 def fechar_conexao(conexao: oracledb.Connection) -> None:
-    """
-    Encerra a conexão com o banco de dados.
-
-    Parâmetros:
-        conexao: Objeto de conexão com o banco de dados.
-    """
     if conexao:
         conexao.close()
 
-
-# Listar opções de tabelas
+# Lista as opções de uma tabela do banco
 def listar_opcoes(tabela: str, campo_id: str, campo_nome: str) -> int | None:
-    """
-    Lista as opções de uma tabela e retorna o ID correspondente à escolha do usuário.
-
-    Parâmetros:
-        tabela (str): Nome da tabela.
-        campo_id (str): Nome do campo ID da tabela.
-        campo_nome (str): Nome do campo de descrição da tabela.
-
-    Retorna:
-        int: ID selecionado pelo usuário ou None em caso de erro.
-    """
     try:
         conexao = conectarBD()
         if not conexao:
@@ -92,18 +66,8 @@ def listar_opcoes(tabela: str, campo_id: str, campo_nome: str) -> int | None:
         fechar_conexao(conexao)
 
 
-# Validação de números positivos
+# Valida números positivos
 def validar_numero_positivo(valor: str, nome_campo: str) -> float:
-    """
-    Valida se um valor é um número positivo.
-
-    Parâmetros:
-        valor (str): Entrada do usuário.
-        nome_campo (str): Nome do campo a ser validado.
-
-    Retorna:
-        float: Número positivo validado.
-    """
     while True:
         try:
             numero = float(valor)
@@ -115,18 +79,8 @@ def validar_numero_positivo(valor: str, nome_campo: str) -> float:
             valor = input(f"Insira novamente o campo '{nome_campo}': ")
 
 
-# Validação de strings não vazias
+# Valida strings não vazias
 def validar_string_nao_vazia(valor: str, nome_campo: str) -> str:
-    """
-    Valida se uma string não está vazia.
-
-    Parâmetros:
-        valor (str): Entrada do usuário.
-        nome_campo (str): Nome do campo a ser validado.
-
-    Retorna:
-        str: String validada.
-    """
     while True:
         if not valor.strip():
             print(f"🔴 O campo '{nome_campo}' não pode estar vazio.")
@@ -135,11 +89,8 @@ def validar_string_nao_vazia(valor: str, nome_campo: str) -> str:
             return valor.strip()
 
 
-# Inserir um novo projeto
+# Insere um novo projeto no Banco de Dados
 def inserir_projeto() -> None:
-    """
-    Insere um novo projeto no banco de dados.
-    """
     try:
         limpar_terminal()
         print("\n=== Cadastrando um novo projeto ===")
@@ -197,11 +148,8 @@ def inserir_projeto() -> None:
         input("\nPressione Enter para continuar...")
 
 
-# Atualizar um projeto existente
+# Atualiza um projeto existente no Banco de Dados
 def atualizar_projeto() -> None:
-    """
-    Atualiza um projeto existente no banco de dados com opção de modificar campos específicos em um menu iterativo.
-    """
     try:
         limpar_terminal()
         print("\n=== Atualizando um projeto ===")
@@ -358,11 +306,8 @@ def atualizar_projeto() -> None:
     finally:
         fechar_conexao(conexao)
 
-# Excluir um projeto
+# Exclui um Projeto Existente do Banco de Dados
 def excluir_projeto() -> None:
-    """
-    Exclui um projeto do banco de dados, após confirmação do usuário.
-    """
     try:
         limpar_terminal()
         print("\n=== Excluindo um projeto ===")
@@ -405,17 +350,8 @@ def excluir_projeto() -> None:
         input("\nPressione Enter para continuar...")
 
 
-# Consultar projetos
+# Consulta os Projetos Existentes no Banco de Dados
 def consultar_projetos(export: bool = False) -> list:
-    """
-    Consulta os projetos no banco de dados e exibe os resultados de forma organizada.
-
-    Parâmetros:
-        export (bool): Define se o texto deve ser ajustado para exportação ou consulta.
-
-    Retorna:
-        list: Lista de dicionários com os dados dos projetos.
-    """
     try:
         if export:
             print("\n=== Selecione os projetos que deseja exportar ===")
@@ -466,15 +402,8 @@ def consultar_projetos(export: bool = False) -> list:
     finally:
         fechar_conexao(conexao)
 
-# Exportação de Dados para JSON
+# Seleciona Projetos do Banco pelo status deles e exporta para um JSON
 def exportar_json(dados: list, nome_arquivo: str = None) -> None:
-    """
-    Exporta os dados para um arquivo JSON de forma organizada e legível.
-
-    Parâmetros:
-        dados (list): Lista de dicionários com os dados a serem exportados.
-        nome_arquivo (str): Nome do arquivo para exportação. Se None, será gerado automaticamente.
-    """
     try:
         if not nome_arquivo:
             hoje = datetime.now().strftime("%Y-%m-%d")
@@ -502,7 +431,7 @@ def exportar_json(dados: list, nome_arquivo: str = None) -> None:
     input("\nPressione Enter para continuar...")
 
 
-# Exportação de Dados para Excel
+# Seleciona Projetos do Banco pelo status deles e exporta para um DataFrame
 def exportar_DataFrame(dados: list, nome_arquivo:str = None) -> None:
     """
     Exporta os dados para um DataFrame (arquivo .xlsx).
@@ -529,11 +458,8 @@ def exportar_DataFrame(dados: list, nome_arquivo:str = None) -> None:
     input("\nPressione Enter para continuar...")
 
 
-# Menu Principal
+# Exibe o Menu Principal
 def exibir_menu()-> None:
-    """
-    Exibe o menu principal.
-    """
     limpar_terminal()
     print("\n=== MENU PRINCIPAL ===")
     print("1. Cadastrar novo Projeto")
@@ -585,5 +511,5 @@ def main() -> None:
             print("\n🔴 Opção inválida. Tente novamente.")
             input("\nPressione Enter para continuar...")
 
-# Executa o programa
+# Execução da Função Principal do Programa
 main()
