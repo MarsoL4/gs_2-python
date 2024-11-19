@@ -71,44 +71,44 @@ def listar_opcoes(tabela: str, campo_id: str, campo_nome: str) -> int | None:
         print(f"\n🔴 Erro ao listar opções na tabela {tabela}: {e}")
         return None
     finally:
-        fechar_conexao(conexao)  # Fecha a conexão após o término
+        fechar_conexao(conexao)  # Fecha a conexão com o Banco
 
 # Valida números positivos
 def validar_numero_positivo(valor: str, nome_campo: str) -> float:
     while True:
         try:
-            numero = float(valor)
+            numero = float(valor)  # Tenta converter o valor para float
             if numero <= 0:
-                raise ValueError(f"O campo '{nome_campo}' deve ser um número positivo.")
-            return numero
+                raise ValueError(f"O campo '{nome_campo}' deve ser um número positivo.")  # Valida se é positivo
+            return numero  # Retorna o número validado
         except ValueError as e:
+            # Exibe erro e solicita nova entrada do usuário
             print(f"\n🔴 {e}")
             valor = input(f"Insira novamente o campo '{nome_campo}': ")
-
 
 # Valida strings não vazias
 def validar_string_nao_vazia(valor: str, nome_campo: str) -> str:
     while True:
-        if not valor.strip():
+        if not valor.strip():  # Verifica se a string está vazia ou contém apenas espaços
             print(f"🔴 O campo '{nome_campo}' não pode estar vazio.")
-            valor = input(f"Insira novamente o campo '{nome_campo}': ")
+            valor = input(f"Insira novamente o campo '{nome_campo}': ")  # Solicita uma nova entrada
         else:
-            return valor.strip()
-
+            return valor.strip()  # Retorna a string validada sem espaços em branco
 
 # Insere um novo projeto no Banco de Dados
 def inserir_projeto() -> None:
     try:
-        limpar_terminal()
+        limpar_terminal()  # Limpa o terminal antes de exibir o menu
         print("\n=== Cadastrando um novo projeto ===")
-        conexao = conectarBD()
+        conexao = conectarBD()  # Estabelece conexão com o banco
         if not conexao:
             return
         cursor = conexao.cursor()
 
+        # Coleta e valida as informações do projeto
         descricao = validar_string_nao_vazia(input("Descrição do projeto: "), "Descrição")
         custo = validar_numero_positivo(input("Custo do projeto: "), "Custo")
-        
+
         # Menu para selecionar o status do projeto
         print("\n=== Escolha o status do projeto ===")
         print("1. Em andamento")
@@ -116,21 +116,24 @@ def inserir_projeto() -> None:
         while True:
             status_opcao = input("Escolha uma opção (1-2): ").strip()
             if status_opcao == "1":
-                status = "Em andamento"
+                status = "Em andamento"  # Define o status como "Em andamento"
                 break
             elif status_opcao == "2":
-                status = "Concluído"
+                status = "Concluído"  # Define o status como "Concluído"
                 break
             else:
-                print("🔴 Opção inválida. Tente novamente.")
+                print("🔴 Opção inválida. Tente novamente.")  # Solicita uma escolha válida
 
+        # Lista opções para tipo de fonte e região
         id_tipo_fonte = listar_opcoes("TBL_TIPO_FONTES", "ID_TIPO_FONTE", "NOME")
         id_regiao = listar_opcoes("TBL_REGIOES_SUSTENTAVEIS", "ID_REGIAO", "NOME")
 
+        # Cancela a operação se não conseguir selecionar as opções
         if id_tipo_fonte is None or id_regiao is None:
             print("🔴 Operação cancelada devido a falha na seleção de dados.")
             return
 
+        # Insere os dados do projeto no banco de dados
         query = """
             INSERT INTO TBL_PROJETOS_SUSTENTAVEIS 
             (DESCRICAO, CUSTO, STATUS, ID_TIPO_FONTE, ID_REGIAO)
@@ -146,29 +149,29 @@ def inserir_projeto() -> None:
                 "id_regiao": id_regiao,
             },
         )
-        conexao.commit()
+        conexao.commit()  # Confirma as alterações no banco
         print("\n🟢 Projeto inserido com sucesso!")
     except Exception as e:
+        # Mensagem de erro em caso de falha
         print(f"\n🔴 Erro ao inserir projeto: {e}")
     finally:
-        fechar_conexao(conexao)
+        fechar_conexao(conexao)  # Fecha a conexão
         input("\nPressione Enter para continuar...")
-
 
 # Atualiza um projeto existente no Banco de Dados
 def atualizar_projeto() -> None:
     try:
-        limpar_terminal()
+        limpar_terminal()  # Limpa o terminal para exibição organizada
         print("\n=== Atualizando um projeto ===")
-        conexao = conectarBD()
+        conexao = conectarBD()  # Conecta ao banco de dados
         if not conexao:
             return
         cursor = conexao.cursor()
 
-        # Selecionar o projeto a ser atualizado
+        # Solicita o ID do projeto a ser atualizado
         id_projeto = validar_numero_positivo(input("ID do projeto a ser atualizado: "), "ID do Projeto")
 
-        # Consultar informações atuais do projeto
+        # Consulta as informações do projeto para exibir ao usuário
         consulta = """
             SELECT ID_PROJETO, DESCRICAO, CUSTO, STATUS, ID_REGIAO 
             FROM RM556310.TBL_PROJETOS_SUSTENTAVEIS
@@ -177,12 +180,12 @@ def atualizar_projeto() -> None:
         cursor.execute(consulta, {"id_projeto": id_projeto})
         resultado = cursor.fetchone()
 
-        if not resultado:
+        if not resultado:  # Verifica se o projeto foi encontrado
             print("\n🔴 Projeto com o ID informado não encontrado.")
             input("\nPressione Enter para continuar...")
             return
 
-        # Valores do projeto
+        # Carrega os dados atuais do projeto
         projeto_atual = {
             "ID_PROJETO": resultado[0],
             "DESCRICAO": resultado[1],
@@ -192,16 +195,16 @@ def atualizar_projeto() -> None:
         }
 
         while True:
-            # Limpar terminal e mostrar informações atuais do projeto
-            limpar_terminal()
+            limpar_terminal()  # Limpa o terminal para mostrar os dados do projeto
             print("\n=== Informações atuais do projeto ===")
+            # Exibe os dados do projeto
             print(f"ID: {projeto_atual['ID_PROJETO']}")
             print(f"Descrição: {projeto_atual['DESCRICAO']}")
             print(f"Custo: R${projeto_atual['CUSTO']:,.2f}")
             print(f"Status: {projeto_atual['STATUS']}")
             print(f"Região ID: {projeto_atual['ID_REGIAO']}")
 
-            # Menu de opções
+            # Menu de opções para atualizar os campos
             print("\n=== Escolha o campo que deseja modificar ===")
             print("1. Descrição")
             print("2. Custo")
@@ -259,7 +262,7 @@ def atualizar_projeto() -> None:
                     print("\n🟢 Região atualizada com sucesso!")
 
             elif opcao == "5":
-                # Salvar alterações e sair
+                # Atualiza os dados no banco de dados e sai do loop
                 query = """
                     UPDATE TBL_PROJETOS_SUSTENTAVEIS
                     SET DESCRICAO = :descricao, CUSTO = :custo, STATUS = :status, ID_REGIAO = :id_regiao
@@ -275,18 +278,17 @@ def atualizar_projeto() -> None:
                         "id_projeto": projeto_atual["ID_PROJETO"],
                     },
                 )
-                conexao.commit()
+                conexao.commit()  # Salva as alterações no banco de dados
                 print("\n🟢 Projeto atualizado com sucesso!")
                 input("\nPressione Enter para continuar...")
                 break
-
             else:
                 print("\n🔴 Opção inválida. Tente novamente.")
 
-            # Perguntar se deseja modificar mais algum campo
+            # Verifica se o usuário deseja continuar alterando
             alterar_mais = input("\nDeseja modificar mais algum campo? (s/n): ").strip().lower()
             if alterar_mais != "s":
-                # Salvar alterações antes de sair
+                # Atualiza os dados antes de sair do loop
                 query = """
                     UPDATE TBL_PROJETOS_SUSTENTAVEIS
                     SET DESCRICAO = :descricao, CUSTO = :custo, STATUS = :status, ID_REGIAO = :id_regiao
@@ -302,38 +304,41 @@ def atualizar_projeto() -> None:
                         "id_projeto": projeto_atual["ID_PROJETO"],
                     },
                 )
-                conexao.commit()
+                conexao.commit()  # Salva as alterações
                 print("\n🟢 Todas as alterações foram salvas com sucesso!")
                 input("\nPressione Enter para continuar...")
                 break
 
     except Exception as e:
+        # Mensagem de erro em caso de falha
         print(f"\n🔴 Erro ao atualizar projeto: {e}")
         input("\nPressione Enter para continuar...")
     finally:
-        fechar_conexao(conexao)
+        fechar_conexao(conexao)  # Fecha a conexão
 
-# Exclui um Projeto Existente do Banco de Dados
+# Exclui um projeto existente do Banco de Dados
 def excluir_projeto() -> None:
     try:
-        limpar_terminal()
+        limpar_terminal()  # Limpa o terminal para exibição organizada
         print("\n=== Excluindo um projeto ===")
-        conexao = conectarBD()
+        conexao = conectarBD()  # Estabelece conexão com o banco de dados
         if not conexao:
             return
         cursor = conexao.cursor()
 
+        # Solicita o ID do projeto a ser excluído
         id_projeto = validar_numero_positivo(input("ID do projeto a ser excluído: "), "ID do Projeto")
 
-        # Busca o projeto para exibir informações antes da confirmação
+        # Consulta as informações do projeto para confirmar exclusão
         consulta = "SELECT DESCRICAO, CUSTO, STATUS FROM TBL_PROJETOS_SUSTENTAVEIS WHERE ID_PROJETO = :id_projeto"
         cursor.execute(consulta, {"id_projeto": id_projeto})
         projeto = cursor.fetchone()
 
-        if not projeto:
+        if not projeto:  # Verifica se o projeto foi encontrado
             print("\n🔴 Projeto com o ID informado não encontrado.")
             return
 
+        # Exibe os detalhes do projeto antes de confirmar exclusão
         print("\n=== Informações do Projeto ===")
         print(f"Descrição: {projeto[0]}")
         print(f"Custo: R${projeto[1]:,.2f}")
@@ -342,60 +347,63 @@ def excluir_projeto() -> None:
         
         confirmacao = input("Digite sua escolha: ").strip().lower()
         if confirmacao != "sim":
-            print("\n🔴 Exclusão cancelada pelo usuário.")
+            print("\n🔴 Exclusão cancelada pelo usuário.")  # Cancela exclusão se não confirmado
             return
 
-        # Exclusão confirmada
+        # Realiza a exclusão do projeto no banco de dados
         query = "DELETE FROM TBL_PROJETOS_SUSTENTAVEIS WHERE ID_PROJETO = :id_projeto"
         cursor.execute(query, {"id_projeto": id_projeto})
-        conexao.commit()
+        conexao.commit()  # Salva a exclusão
         print("\n🟢 Projeto excluído com sucesso!")
     except Exception as e:
+        # Exibe mensagem de erro em caso de falha
         print(f"\n🔴 Erro ao excluir projeto: {e}")
     finally:
-        fechar_conexao(conexao)
+        fechar_conexao(conexao)  # Fecha a conexão
         input("\nPressione Enter para continuar...")
 
-
-# Consulta os Projetos Existentes no Banco de Dados
+# Consulta os projetos existentes no Banco de Dados
 def consultar_projetos(export: bool = False) -> list:
     try:
         if export:
             print("\n=== Selecione os projetos que deseja exportar ===")
         else:
-            limpar_terminal()
+            limpar_terminal()  # Limpa o terminal para exibição organizada
             print("\n=== Consultando projetos ===")
         
+        # Menu de filtro para a consulta de projetos
         print("1. Todos os projetos")
         print("2. Apenas os projetos em andamento")
         print("3. Apenas os projetos concluídos")
 
         escolha = input("Escolha uma opção (1-3): ").strip()
         if escolha not in ["1", "2", "3"]:
-            print("\n🔴 Opção inválida.")
+            print("\n🔴 Opção inválida.")  # Retorna se a escolha for inválida
             return []
 
+        # Monta a consulta SQL com base na escolha do usuário
         consulta = """
             SELECT ID_PROJETO, DESCRICAO, CUSTO, STATUS, ID_TIPO_FONTE, ID_REGIAO
             FROM RM556310.TBL_PROJETOS_SUSTENTAVEIS
         """
         if escolha == "2":
-            consulta += " WHERE STATUS = 'Em andamento'"
+            consulta += " WHERE STATUS = 'Em andamento'"  # Filtra projetos em andamento
         elif escolha == "3":
-            consulta += " WHERE STATUS = 'Concluído'"
+            consulta += " WHERE STATUS = 'Concluído'"  # Filtra projetos concluídos
 
-        conexao = conectarBD()
+        conexao = conectarBD()  # Conecta ao banco de dados
         if not conexao:
             return []
         cursor = conexao.cursor()
         cursor.execute(consulta)
 
-        resultados = cursor.fetchall()
+        resultados = cursor.fetchall()  # Armazena os resultados da consulta
         if not resultados:
-            print("\n🔴 Nenhum projeto encontrado.")
+            print("\n🔴 Nenhum projeto encontrado.")  # Exibe mensagem se não houver resultados
         else:
             if export:
                 print("\n=== Projetos que serão exportados ===")
+            # Exibe os resultados da consulta
             for projeto in resultados:
                 print(
                     f"\nID: {projeto[0]} | Descrição: {projeto[1]} | "
@@ -403,20 +411,20 @@ def consultar_projetos(export: bool = False) -> list:
                 )
 
         if not export:
-            input("\nPressione Enter para continuar...")
+            input("\nPressione Enter para continuar...")  # Pausa para visualização dos resultados
 
-        return resultados
+        return resultados  # Retorna a lista de resultados
     finally:
-        fechar_conexao(conexao)
+        fechar_conexao(conexao)  # Fecha a conexão ao término
 
-# Seleciona Projetos do Banco pelo status deles e exporta para um JSON
+# Exporta projetos selecionados para um arquivo JSON
 def exportar_json(dados: list, nome_arquivo: str = None) -> None:
     try:
         if not nome_arquivo:
-            hoje = datetime.now().strftime("%Y-%m-%d")
+            hoje = datetime.now().strftime("%Y-%m-%d")  # Gera um nome padrão para o arquivo
             nome_arquivo = f"projetos_{hoje}.json"
 
-        # Garantindo que os dados sejam uma lista de dicionários
+        # Transforma os dados em formato JSON
         if isinstance(dados, list) and all(isinstance(item, (list, tuple)) for item in dados):
             dados = [
                 {
@@ -430,45 +438,43 @@ def exportar_json(dados: list, nome_arquivo: str = None) -> None:
                 for item in dados
             ]
 
+        # Escreve os dados em um arquivo JSON
         with open(nome_arquivo, "w", encoding="utf-8") as arquivo:
             json.dump(dados, arquivo, indent=4, ensure_ascii=False)
         print(f"\n🟢 Dados exportados para o arquivo: {nome_arquivo}")
     except Exception as e:
+        # Exibe mensagem de erro caso a exportação falhe
         print(f"\n🔴 Erro ao exportar para JSON: {e}")
-    input("\nPressione Enter para continuar...")
+    input("\nPressione Enter para continuar...")  # Pausa para visualização da mensagem
 
-
-# Seleciona Projetos do Banco pelo status deles e exporta para um DataFrame
-def exportar_DataFrame(dados: list, nome_arquivo:str = None) -> None:
-    """
-    Exporta os dados para um DataFrame (arquivo .xlsx).
-
-    Parâmetros:
-        dados (list): Lista de dicionários com os dados a serem exportados.
-        nome_arquivo (str): Nome do arquivo para exportação. Se None, será gerado automaticamente.
-    """
+# Exporta projetos selecionados para um arquivo Excel (.xlsx)
+def exportar_DataFrame(dados: list, nome_arquivo: str = None) -> None:
     try:
         if not nome_arquivo:
-            hoje = datetime.now().strftime("%Y-%m-%d")
+            hoje = datetime.now().strftime("%Y-%m-%d")  # Gera um nome padrão para o arquivo
             nome_arquivo = f"projetos_{hoje}.xlsx"
 
+        # Converte os dados para um DataFrame do pandas
         df = pd.DataFrame(
             dados,
             columns=["ID_PROJETO", "DESCRICAO", "CUSTO", "STATUS", "ID_TIPO_FONTE", "ID_REGIAO"],
         )
+        # Exporta o DataFrame para um arquivo Excel
         df.to_excel(nome_arquivo, index=False, engine="openpyxl")
         print(f"\n🟢 Dados exportados para o arquivo: {nome_arquivo}")
     except ModuleNotFoundError:
+        # Mensagem caso a biblioteca necessária não esteja instalada
         print("\n🔴 O módulo 'openpyxl' não está instalado. Por favor, instale-o usando 'pip install openpyxl'.")
     except Exception as e:
+        # Exibe mensagem de erro caso a exportação falhe
         print(f"\n🔴 Erro ao exportar para Excel: {e}")
-    input("\nPressione Enter para continuar...")
+    input("\nPressione Enter para continuar...")  # Pausa para visualização
 
-
-# Exibe o Menu Principal
-def exibir_menu()-> None:
-    limpar_terminal()
+# Exibe o menu principal
+def exibir_menu() -> None:
+    limpar_terminal()  # Limpa o terminal antes de exibir o menu
     print("\n=== MENU PRINCIPAL ===")
+    # Opções disponíveis no sistema
     print("1. Cadastrar novo Projeto")
     print("2. Atualizar Projeto Existente")
     print("3. Excluir Projeto pelo ID")
@@ -476,47 +482,46 @@ def exibir_menu()-> None:
     print("5. Exportar Projetos para JSON ou DataFrame")
     print("6. Sair")
 
-
-# Função Principal
+# Função principal que controla o fluxo do programa
 def main() -> None:
-    """
-    Função principal que controla o fluxo do programa.
-    """
     while True:
-        exibir_menu()
-        opcao = input("Escolha uma opção: ")
+        exibir_menu()  # Exibe o menu principal
+        opcao = input("Escolha uma opção: ")  # Solicita a escolha do usuário
         if opcao == "1":
-            inserir_projeto()
+            inserir_projeto()  # Chama a função para cadastrar um projeto
         elif opcao == "2":
-            atualizar_projeto()
+            atualizar_projeto()  # Chama a função para atualizar um projeto
         elif opcao == "3":
-            excluir_projeto()
+            excluir_projeto()  # Chama a função para excluir um projeto
         elif opcao == "4":
-            consultar_projetos()
+            consultar_projetos()  # Chama a função para consultar projetos
         elif opcao == "5":
+            # Realiza a exportação de projetos
             projects = consultar_projetos(export=True)
             if projects:
                 while True:
                     print("\n=== Exportar Dados ===")
                     print("1. Exportar para JSON")
                     print("2. Exportar para Excel")
-                    export_opcao = input("Escolha uma opção (1-2): ")
+                    export_opcao = input("Escolha uma opção (1-2): ").strip()
                     if export_opcao == "1":
-                        exportar_json(projects)
+                        exportar_json(projects)  # Exporta para JSON
                         break
                     elif export_opcao == "2":
-                        exportar_DataFrame(projects)
+                        exportar_DataFrame(projects)  # Exporta para Excel
                         break
                     else:
                         print("🔴 Opção inválida. Tente novamente.")
             else:
                 print("🔴 Nenhum dado disponível para exportação.")
         elif opcao == "6":
+            # Finaliza o sistema
             print("\n🟢 Saindo do sistema...")
             break
         else:
+            # Mensagem para opções inválidas
             print("\n🔴 Opção inválida. Tente novamente.")
             input("\nPressione Enter para continuar...")
 
-# Execução da Função Principal do Programa
+# Executa a função principal
 main()
