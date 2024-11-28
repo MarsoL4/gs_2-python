@@ -1,0 +1,18 @@
+[
+    {
+        "ID_PROJETO": 1,
+        "DESCRICAO": "Biomassa Comunitária",
+        "CUSTO": 50000.0,
+        "STATUS": "Concluído",
+        "ID_TIPO_FONTE": 1,
+        "ID_REGIAO": 2
+    },
+    {
+        "ID_PROJETO": 3,
+        "DESCRICAO": "Instalações de Geração de Energia eólica em regioes carentes do Brasil",
+        "CUSTO": 50000.0,
+        "STATUS": "Em andamento",
+        "ID_TIPO_FONTE": 2,
+        "ID_REGIAO": 2
+    }
+]

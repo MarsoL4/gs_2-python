@@ -18,9 +18,9 @@ def conectarBD() -> oracledb.Connection | None:
     try:
         # Conecta ao banco de dados usando as credenciais fornecidas
         conn = oracledb.connect(
-            user="RM556310",
-            password="130206",
-            dsn="(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=oracle.fiap.com.br)(PORT=1521))(CONNECT_DATA=(SID=ORCL)))",
+            user="SEU USUÁRIO",
+            password="SUA SENHA",
+            dsn="(DESCRIPTION=(ADDRESS=(PROTOCOL= SEU PROTOCOL)(HOST= SEU HOST)(PORT= SEU PORT))(CONNECT_DATA=(SID= SEU SID)))",
         )
         return conn  # Retorna a conexão ativa
     except oracledb.Error as e:
